@@ -76,6 +76,7 @@ io.sockets.on('connection', function(socket){
 		}else{
 			userIndex++
 		}
+		console.log('下一回合');
 		userTurn = userList[userIndex];
 		io.emit('whos turn', userTurn);
 		
@@ -124,19 +125,36 @@ io.sockets.on('connection', function(socket){
     });
 	//监听用户要牌
 	socket.on('user order',function(choice){
-		console.log('用户要了牌');
+		console.log('用户要了'+ choice);
 		socket.broadcast.emit('request poker', choice)
 	});	
 	//监听其他玩家给牌
 	socket.on('delivered poker',function(data){
-		console.log('收到信息+1');
+		console.log('传递扑克');
 		
 		io.sockets.connected[usersId[userList[userIndex]]].emit('accept poker', data);
 	});
 	//没有牌给
 	socket.on('deliver nopoker',function(name){
 		io.sockets.connected[usersId[userList[userIndex]]].emit('accept nopoker', name);
-	})
+	});
+	//扔的第一张
+	socket.on('drop firstPoker',function(poker){
+		socket.broadcast.emit('one of three', {pokerid:poker,who:userTurn});
+		nextTurn();
+		console.log(userTurn + '扔了三张！');
+	});
+	//扔的其他，别人不知道，自己知道
+	socket.on('drop otherPoker',function(pokers){
+		socket.emit('others poker', pokers);
+		
+	});
+	//只扔了一张
+	socket.on('drop onePoker',function(poker){
+		io.emit('only onePoker',{pokerid:poker,who:userTurn});
+		nextTurn();
+		console.log(userTurn + '扔了一张！');
+	});
 	//测试专用
 	socket.on('test',function(){
 		console.log('测试通过');
