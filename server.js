@@ -9,11 +9,14 @@ var gamerPoker = {};
 var gameRound = 0;
 var userIndex =0;
 var userTurn;
+var MURDER;
+var PUBLISH;
 
 io.sockets.on('connection', function(socket){
 
 	function gameInit(){
 		gameOn = true;
+		MURDER = null;
 		gamerNum = userList.length;
 		dealing(gamerNum);
 		gameStart();
@@ -31,7 +34,8 @@ io.sockets.on('connection', function(socket){
 					console.log( poker.pokers.slice(index,index+6));
 					gamerPoker[userList[i]] = poker.pokers.slice(index,index+6);
 					io.sockets.connected[usersId[userList[i]]].emit('send poker', {poker:gamerPoker[userList[i]],num:1});
-				}	
+				}
+				
 				break;
 			case 2:
 				console.log('2个玩家');
@@ -41,6 +45,10 @@ io.sockets.on('connection', function(socket){
 					gamerPoker[userList[i]] = poker.pokers.slice(i*6,i*6+6);
 					io.sockets.connected[usersId[userList[i]]].emit('send poker', {poker:gamerPoker[userList[i]],num:2});
 				}
+				PUBLISH = poker.pokers.slice(24,27); 
+				MURDER = poker.pokers[27];
+				io.emit('public pokers', PUBLISH);
+				console.log('公共牌' +PUBLISH +' 凶手 ' + MURDER );
 				break;
 			case 3:
 				for(i=0;i<3;i++){
@@ -49,6 +57,10 @@ io.sockets.on('connection', function(socket){
 					gamerPoker[userList[i]] = poker.pokers.slice(i*8,i*8+8);
 					io.sockets.connected[usersId[userList[i]]].emit('send poker',{poker:gamerPoker[userList[i]],num:3});
 				}
+				PUBLISH = poker.pokers.slice(24,27); 
+				MURDER = poker.pokers[27];
+				io.emit('public pokers', PUBLISH);
+				console.log('公共牌' +PUBLISH +' 凶手 ' + MURDER );
 				break;
 			case 4:
 				for(i=0;i<4;i++){
@@ -57,6 +69,34 @@ io.sockets.on('connection', function(socket){
 					gamerPoker[userList[i]] = poker.pokers.slice(i*6,i*6+6);
 					io.sockets.connected[usersId[userList[i]]].emit('send poker', {poker:gamerPoker[userList[i]],num:4});
 				}
+				PUBLISH = poker.pokers.slice(24,27); 
+				MURDER = poker.pokers[27];
+				io.emit('public pokers', PUBLISH);
+				console.log('公共牌' +PUBLISH +' 凶手 ' + MURDER );
+				break;
+			case 5:
+				for(i=0;i<5;i++){
+					var index = i*5;
+					console.log(poker.pokers.slice(i*5,i*5+5));
+					gamerPoker[userList[i]] = poker.pokers.slice(i*5,i*5+5);
+					io.sockets.connected[usersId[userList[i]]].emit('send poker', {poker:gamerPoker[userList[i]],num:5});
+				}
+				PUBLISH = poker.pokers.slice(25,27); 
+				MURDER = poker.pokers[27];
+				io.emit('public pokers', PUBLISH);
+				console.log('公共牌' +PUBLISH +' 凶手 ' + MURDER );
+				break;
+			case 6:
+				for(i=0;i<6;i++){
+					var index = i*4;
+					console.log(poker.pokers.slice(i*4,i*4+4));
+					gamerPoker[userList[i]] = poker.pokers.slice(i*4,i*4+4);
+					io.sockets.connected[usersId[userList[i]]].emit('send poker', {poker:gamerPoker[userList[i]],num:6});
+				}
+				PUBLISH = poker.pokers.slice(24,27); 
+				MURDER = poker.pokers[27];
+				io.emit('public pokers', PUBLISH);
+				console.log('公共牌' +PUBLISH +' 凶手 ' + MURDER );
 				break;
 			default:
 				break;
@@ -126,7 +166,7 @@ io.sockets.on('connection', function(socket){
 	//监听用户要牌
 	socket.on('user order',function(choice){
 		console.log('用户要了'+ choice);
-		socket.broadcast.emit('request poker', choice)
+		socket.broadcast.emit('request poker', choice);
 	});	
 	//监听其他玩家给牌
 	socket.on('delivered poker',function(data){
@@ -136,7 +176,9 @@ io.sockets.on('connection', function(socket){
 	});
 	//没有牌给
 	socket.on('deliver nopoker',function(name){
-		io.sockets.connected[usersId[userList[userIndex]]].emit('accept nopoker', name);
+		if(usersId[userList[userIndex]]){
+			io.sockets.connected[usersId[userList[userIndex]]].emit('accept nopoker', name);
+		}
 	});
 	//扔的第一张
 	socket.on('drop firstPoker',function(poker){
@@ -154,6 +196,29 @@ io.sockets.on('connection', function(socket){
 		io.emit('only onePoker',{pokerid:poker,who:userTurn});
 		nextTurn();
 		console.log(userTurn + '扔了一张！');
+	});
+	
+	//监听guess
+	socket.on('guess',function(data){
+		console.log('有人才了');
+		console.log(data.pokerid);
+		if(data.pokerid == MURDER ){
+			io.emit('bingo',{who:data.who,pokerid:data.pokerid});
+			var gameOn = false;
+		}else{
+			io.emit('guess failed', {who:data.who,pokerid:data.pokerid});
+			for(i=0;i<userList.length;i++){
+				if(userList[i]==data.who){
+					userList.splice(i,1);
+				}
+			}
+			gamerNum--;
+			nextTurn();
+		}
+	});
+	//手牌没了
+	socket.on('show my pokers',function(data){
+		socket.broadcast.emit('show its pokers', data);
 	});
 	//测试专用
 	socket.on('test',function(){
