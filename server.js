@@ -11,6 +11,7 @@ var userIndex =0;
 var userTurn;
 var MURDER;
 var PUBLISH;
+var readyNum = 0;
 
 io.sockets.on('connection', function(socket){
 
@@ -40,9 +41,9 @@ io.sockets.on('connection', function(socket){
 			case 2:
 				console.log('2个玩家');
 				for(i=0;i<2;i++){
-					var index = i*6;
-					console.log( poker.pokers.slice(i*6,i*6+6));
-					gamerPoker[userList[i]] = poker.pokers.slice(i*6,i*6+6);
+					var index = i*12;
+					console.log( poker.pokers.slice(i*12,i*12+12));
+					gamerPoker[userList[i]] = poker.pokers.slice(i*12,i*12+12);
 					io.sockets.connected[usersId[userList[i]]].emit('send poker', {poker:gamerPoker[userList[i]],num:2});
 				}
 				PUBLISH = poker.pokers.slice(24,27); 
@@ -135,8 +136,12 @@ io.sockets.on('connection', function(socket){
 	}
 	var addedUser = false;
 	//监听游戏开始
-	socket.on('game start', function(){
-		gameInit();
+	socket.on('im ready',function(){
+		console.log('someone is ready!' + readyNum);
+		if(++readyNum==userList.length){
+			io.emit('all is ready');
+			gameInit();
+		}
 	});
 	
 	//监听用户登录登出
