@@ -29,15 +29,6 @@ io.sockets.on('connection', function(socket){
 		console.log("这次的玩家有" + userList);
 		
 		switch(gamerNum){
-			case 1:
-				for(i=0;i<1;i++){
-					var index = i*6;
-					console.log( poker.pokers.slice(index,index+6));
-					gamerPoker[userList[i]] = poker.pokers.slice(index,index+6);
-					io.sockets.connected[usersId[userList[i]]].emit('send poker', {poker:gamerPoker[userList[i]],num:1});
-				}
-				
-				break;
 			case 2:
 				console.log('2个玩家');
 				for(i=0;i<2;i++){
@@ -117,7 +108,7 @@ io.sockets.on('connection', function(socket){
 		}else{
 			userIndex++
 		}
-		console.log('下一回合');
+		console.log('下一回合,轮到第' + userIndex );
 		userTurn = userList[userIndex];
 		io.emit('whos turn', userTurn);
 		
@@ -218,7 +209,12 @@ io.sockets.on('connection', function(socket){
 				}
 			}
 			gamerNum--;
-			nextTurn();
+			if(gamerNum==1){
+				io.emit('game over');
+			}else{
+				userIndex--;
+				nextTurn();
+			}
 		}
 	});
 	//手牌没了
