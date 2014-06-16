@@ -138,17 +138,15 @@ io.sockets.on('connection', function(socket){
 	//监听游戏开始
 	socket.on('im ready',function(){
 		console.log('someone is ready!' + readyNum);
-		if(++readyNum==userList.length){
+		if(++readyNum==userList.length && readyNum > 1){
 			io.emit('all is ready');
 			gameInit();
+			readyNum = 0;
 		}
 	});
 	
 	//监听用户登录登出
 	socket.on('user login', function(nickName){
-		if(nickName=='Tony'){
-			socket.emit('host joined');
-		}
 		console.log(socket.id);
 		usersId[nickName] = socket.id;
 		console.log(nickName + " 进来了");
@@ -209,7 +207,9 @@ io.sockets.on('connection', function(socket){
 		console.log(data.pokerid);
 		if(data.pokerid == MURDER ){
 			io.emit('bingo',{who:data.who,pokerid:data.pokerid});
-			var gameOn = false;
+			gameOn = false;
+			gamerPoker ={};
+			gamerNum = 0;
 		}else{
 			io.emit('guess failed', {who:data.who,pokerid:data.pokerid});
 			for(i=0;i<userList.length;i++){
