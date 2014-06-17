@@ -14,7 +14,8 @@ var PUBLISH;
 var readyNum = 0;
 
 io.sockets.on('connection', function(socket){
-
+	socket.emit('server is Ok');
+	
 	function gameInit(){
 		gameOn = true;
 		MURDER = null;
