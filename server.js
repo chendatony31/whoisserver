@@ -129,8 +129,9 @@ io.sockets.on('connection', function(socket){
 	var addedUser = false;
 	//监听游戏开始
 	socket.on('im ready',function(){
+		readyNum ++;
 		console.log('someone is ready!' + readyNum);
-		if(++readyNum==userList.length && readyNum > 1){
+		if(readyNum==userList.length && readyNum > 1){
 			io.emit('all is ready');
 			gameInit();
 			readyNum = 0;
@@ -153,11 +154,7 @@ io.sockets.on('connection', function(socket){
 		console.log(userNum + '名用户在线');
 	});
 	
-	//监听接收消息
-    socket.on('send message', function (data) {
-		io.sockets.emit('show message', data);
-        console.log(data);
-    });
+	
 	//监听用户要牌
 	socket.on('user order',function(choice){
 		console.log('用户要了'+ choice);
@@ -202,6 +199,8 @@ io.sockets.on('connection', function(socket){
 			gameOn = false;
 			gamerPoker ={};
 			gamerNum = 0;
+			readyNum = 0;
+			
 		}else{
 			io.emit('guess failed', {who:data.who,pokerid:data.pokerid});
 			for(i=0;i<userList.length;i++){
@@ -223,9 +222,14 @@ io.sockets.on('connection', function(socket){
 		socket.broadcast.emit('show its pokers', data);
 	});
 	//测试专用
-	socket.on('test',function(){
+	/*socket.on('test',function(){
 		console.log('测试通过');
 	});
+	监听接收消息
+    socket.on('send message', function (data) {
+		io.sockets.emit('show message', data);
+        console.log(data);
+    });*/
 	
 	//断开连接
 	socket.on('disconnect', function(){
@@ -235,6 +239,8 @@ io.sockets.on('connection', function(socket){
 					console.log( socket.userName +'登出， 现在还有' + --userNum + '名用户');
 					userList.splice(i,1);
 					io.sockets.emit('note user login', userListJson);
+					readyNum = 0;
+					console.log('准备人数:'+readyNum);
 					break;
 				}
 			}
