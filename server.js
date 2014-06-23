@@ -144,19 +144,29 @@ io.sockets.on('connection', function(socket){
 	
 	//监听用户登录登出
 	socket.on('user login', function(nickName){
-		console.log(socket.id);
-		usersId[nickName] = socket.id;
-		console.log(nickName + " 进来了");
-		
-		userList.push(nickName);
-		socket.client.id = nickName;
-		socket.userName = nickName;
-		addedUser = true;
-		console.log('用户有：'+ userList);
-		userListJson = {users : userList};
-		io.sockets.emit('note user login', userListJson);
-		userNum++
-		console.log(userNum + '名用户在线');
+		var exist = false;
+		for(i=0;i<userList.length;i++){
+			if(nickName == userList[i]){
+				exist=true;
+			}
+		}
+		if(!exist){
+			usersId[nickName] = socket.id;
+			console.log(nickName + " 进来了");
+			
+			userList.push(nickName);
+			socket.client.id = nickName;
+			socket.userName = nickName;
+			addedUser = true;
+			console.log('用户有：'+ userList);
+			userListJson = {users : userList};
+			socket.emit('login okornot',true);
+			io.sockets.emit('note user login', userListJson);
+			userNum++
+			console.log(userNum + '名用户在线');
+		}else{
+			socket.emit('login okornot',false);
+		}
 	});
 	
 	
