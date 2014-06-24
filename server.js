@@ -163,6 +163,7 @@ io.sockets.on('connection', function(socket){
 			socket.emit('login okornot',true);
 			io.sockets.emit('note user login', userListJson);
 			userNum++
+			readyNum = 0;
 			console.log(userNum + '名用户在线');
 		}else{
 			socket.emit('login okornot',false);
