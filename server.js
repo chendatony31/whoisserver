@@ -14,7 +14,8 @@ var MURDER;
 var PUBLISH;
 var readyNum = 0;
 
-io.sockets.on('connection', function(socket){
+var game = io.of('/game');
+game.on('connection', function(socket){
 	socket.emit('server is Ok');
 	
 	function gameInit(){
@@ -40,11 +41,11 @@ io.sockets.on('connection', function(socket){
 					var index = i*12;
 					console.log( poker.pokers.slice(i*12,i*12+12));
 					gamerPoker[gamerList[i]] = poker.pokers.slice(i*12,i*12+12);
-					io.sockets.connected[usersId[gamerList[i]]].emit('send poker', {poker:gamerPoker[userList[i]],num:2});
+					game.connected[usersId[gamerList[i]]].emit('send poker', {poker:gamerPoker[userList[i]],num:2});
 				}
 				PUBLISH = poker.pokers.slice(24,27); 
 				MURDER = poker.pokers[27];
-				io.emit('public pokers', PUBLISH);
+				game.emit('public pokers', PUBLISH);
 				console.log('公共牌' +PUBLISH +' 凶手 ' + MURDER );
 				break;
 			case 3:
@@ -52,11 +53,11 @@ io.sockets.on('connection', function(socket){
 					var index = i*8;
 					console.log( poker.pokers.slice(i*8,i*8+8));
 					gamerPoker[gamerList[i]] = poker.pokers.slice(i*8,i*8+8);
-					io.sockets.connected[usersId[gamerList[i]]].emit('send poker',{poker:gamerPoker[userList[i]],num:3});
+					game.connected[usersId[gamerList[i]]].emit('send poker',{poker:gamerPoker[userList[i]],num:3});
 				}
 				PUBLISH = poker.pokers.slice(24,27); 
 				MURDER = poker.pokers[27];
-				io.emit('public pokers', PUBLISH);
+				game.emit('public pokers', PUBLISH);
 				console.log('公共牌' +PUBLISH +' 凶手 ' + MURDER );
 				break;
 			case 4:
@@ -64,11 +65,11 @@ io.sockets.on('connection', function(socket){
 					var index = i*6;
 					console.log( poker.pokers.slice(i*6,i*6+6));
 					gamerPoker[gamerList[i]] = poker.pokers.slice(i*6,i*6+6);
-					io.sockets.connected[usersId[gamerList[i]]].emit('send poker', {poker:gamerPoker[userList[i]],num:4});
+					game.connected[usersId[gamerList[i]]].emit('send poker', {poker:gamerPoker[userList[i]],num:4});
 				}
 				PUBLISH = poker.pokers.slice(24,27); 
 				MURDER = poker.pokers[27];
-				io.emit('public pokers', PUBLISH);
+				game.emit('public pokers', PUBLISH);
 				console.log('公共牌' +PUBLISH +' 凶手 ' + MURDER );
 				break;
 			case 5:
@@ -76,11 +77,11 @@ io.sockets.on('connection', function(socket){
 					var index = i*5;
 					console.log(poker.pokers.slice(i*5,i*5+5));
 					gamerPoker[gamerList[i]] = poker.pokers.slice(i*5,i*5+5);
-					io.sockets.connected[usersId[gamerList[i]]].emit('send poker', {poker:gamerPoker[userList[i]],num:5});
+					game.connected[usersId[gamerList[i]]].emit('send poker', {poker:gamerPoker[userList[i]],num:5});
 				}
 				PUBLISH = poker.pokers.slice(25,27); 
 				MURDER = poker.pokers[27];
-				io.emit('public pokers', PUBLISH);
+				game.emit('public pokers', PUBLISH);
 				console.log('公共牌' +PUBLISH +' 凶手 ' + MURDER );
 				break;
 			case 6:
@@ -88,11 +89,11 @@ io.sockets.on('connection', function(socket){
 					var index = i*4;
 					console.log(poker.pokers.slice(i*4,i*4+4));
 					gamerPoker[gamerList[i]] = poker.pokers.slice(i*4,i*4+4);
-					io.sockets.connected[usersId[gamerList[i]]].emit('send poker', {poker:gamerPoker[userList[i]],num:6});
+					game.connected[usersId[gamerList[i]]].emit('send poker', {poker:gamerPoker[userList[i]],num:6});
 				}
 				PUBLISH = poker.pokers.slice(24,27); 
 				MURDER = poker.pokers[27];
-				io.emit('public pokers', PUBLISH);
+				game.emit('public pokers', PUBLISH);
 				console.log('公共牌' +PUBLISH +' 凶手 ' + MURDER );
 				break;
 			default:
@@ -103,7 +104,7 @@ io.sockets.on('connection', function(socket){
 	function gameStart(){
 
 		userTurn = gamerList[userIndex];
-		io.emit('whos turn', userTurn);
+		game.emit('whos turn', userTurn);
 		
 		
 	}
@@ -115,7 +116,7 @@ io.sockets.on('connection', function(socket){
 		}
 		console.log('下一回合,轮到第' + userIndex );
 		userTurn = gamerList[userIndex];
-		io.emit('whos turn', userTurn);
+		game.emit('whos turn', userTurn);
 		
 	}
 		//扑克构造函数
@@ -136,7 +137,7 @@ io.sockets.on('connection', function(socket){
 		readyNum ++;
 		console.log('someone is ready!' + readyNum +" " + userList.length);
 		if(readyNum==userList.length && readyNum > 1){
-			io.emit('all is ready');
+			game.emit('all is ready');
 			gameInit();
 			readyNum = 0;
 		}
@@ -161,7 +162,7 @@ io.sockets.on('connection', function(socket){
 			console.log('用户有：'+ userList);
 			userListJson = {users : userList};
 			socket.emit('login okornot',true);
-			io.sockets.emit('note user login', userListJson);
+			game.emit('note user login', userListJson);
 			userNum++
 			readyNum = 0;
 			console.log(userNum + '名用户在线');
@@ -201,7 +202,7 @@ io.sockets.on('connection', function(socket){
 	});
 	//只扔了一张
 	socket.on('drop onePoker',function(poker){
-		io.emit('only onePoker',{pokerid:poker,who:userTurn});
+		game.emit('only onePoker',{pokerid:poker,who:userTurn});
 		nextTurn();
 		console.log(userTurn + '扔了一张！');
 	});
@@ -211,14 +212,14 @@ io.sockets.on('connection', function(socket){
 		console.log('有人才了');
 		console.log(data.pokerid);
 		if(data.pokerid == MURDER ){
-			io.emit('bingo',{who:data.who,pokerid:data.pokerid});
+			game.emit('bingo',{who:data.who,pokerid:data.pokerid});
 			gameOn = false;
 			gamerPoker ={};
 			gamerNum = 0;
 			readyNum = 0;
 			
 		}else{
-			io.emit('guess failed', {who:data.who,pokerid:data.pokerid});
+			game.emit('guess failed', {who:data.who,pokerid:data.pokerid});
 			for(i=0;i<gamerList.length;i++){
 				if(gamerList[i]==data.who){
 					gamerList.splice(i,1);
@@ -230,7 +231,7 @@ io.sockets.on('connection', function(socket){
 				gamerPoker ={};
 				gamerNum = 0;
 				readyNum = 0;
-				io.emit('game over');
+				game.emit('game over');
 			}else{
 				userIndex--;
 				nextTurn();
@@ -247,7 +248,7 @@ io.sockets.on('connection', function(socket){
 	});
 	监听接收消息
     socket.on('send message', function (data) {
-		io.sockets.emit('show message', data);
+		game.emit('show message', data);
         console.log(data);
     });*/
 	
@@ -258,7 +259,7 @@ io.sockets.on('connection', function(socket){
 				if(userList[i]==socket.userName){
 					console.log( socket.userName +'登出， 现在还有' + --userNum + '名用户');
 					userList.splice(i,1);
-					io.sockets.emit('note user login', userListJson);
+					game.emit('note user login', userListJson);
 					readyNum = 0;
 					console.log('准备人数:'+readyNum);
 					break;
