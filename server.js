@@ -181,12 +181,12 @@ game.on('connection', function(socket){
 	socket.on('delivered poker',function(data){
 		console.log('传递扑克');
 		
-		io.sockets.connected[usersId[gamerList[userIndex]]].emit('accept poker', data);
+		game.connected[usersId[gamerList[userIndex]]].emit('accept poker', data);
 	});
 	//没有牌给
 	socket.on('deliver nopoker',function(name){
 		if(usersId[gamerList[userIndex]]){
-			io.sockets.connected[usersId[gamerList[userIndex]]].emit('accept nopoker', name);
+			game.connected[usersId[gamerList[userIndex]]].emit('accept nopoker', name);
 		}
 	});
 	//扔的第一张
