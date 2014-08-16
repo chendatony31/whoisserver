@@ -270,9 +270,9 @@ game.on('connection', function(socket){
 	});
 	//没有牌给
 	socket.on('deliver nopoker',function(name){
-		if(ROOMS[socket.ROOMNAME].userId[gamerList[ROOMS[socket.ROOMNAME].userIndex]]){
+		//if(ROOMS[socket.ROOMNAME].userId[ROOMS[socket.ROOMNAME].gamerList[ROOMS[socket.ROOMNAME].userIndex]]){
 			game.connected[ROOMS[socket.ROOMNAME].userId[ROOMS[socket.ROOMNAME].gamerList[ROOMS[socket.ROOMNAME].userIndex]]].emit('accept nopoker', name);
-		}
+		//}
 	});
 	//扔的第一张
 	socket.on('drop firstPoker',function(poker){
