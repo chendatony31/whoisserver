@@ -18,10 +18,14 @@ var ROOMS = [];
 var allUserList = []
 //var roomList = [];
 var allNum = 0;
+var TOTALLVISIT = 0;
+var OnlineNum = 0;
 
 
 var game = io.of('/game');
 game.on('connection', function(socket){
+	++TOTALLVISIT;
+	++OnlineNum;
 	//room构造函数
 	function Room(roomid){
 		this.roomId = roomid;
@@ -149,40 +153,39 @@ game.on('connection', function(socket){
 		}
 	}
 	//连接成功
-	socket.emit('server is Ok');
+
+	socket.emit('server is Ok',[TOTALLVISIT,OnlineNum]);
 
 		
 	
 	var ADDEDUSER = false;
 	
 	
-	//监测用户名
+	//监测用户名并进入
 	socket.on('check nickName', function(nickName){
 		var exist = false;
-		for(i=0;i<allUserList.length;i++){
-			if(nickName == allUserList[i]){
+		for(i=0;i<ROOMS[socket.ROOMNAME].userList.length;i++){
+			if(nickName == ROOMS[socket.ROOMNAME].userList[i]){
 				exist=true;
 				break;
 			}
 		}
 		if(!exist){	
-			//ADDEDUSER = true;
-			//console.log('用户有：'+ userList);
-			//userListJson = {users : userList};
-			socket.emit('login okornot',true);
-			//game.to(socket.ROOMNUM).emit('note user login', userListJson);
-			//userNum++
-			//readyNum = 0;
-			//console.log(userNum + '名用户在线');
+			
+			socket.NICKNAME = nickName;
+			ROOMS[socket.ROOMNAME].userId[nickName] = socket.id
+			ROOMS[socket.ROOMNAME].userList.push(nickName);
+			allUserList.push(nickName);
+			console.log(nickName + " 进入了 房间"+ socket.ROOMNAME );
+			game.to(socket.ROOMNUM).emit('user inRoom', [socket.ROOMNUM,ROOMS[socket.ROOMNAME].userList]);
 		}else{
-			socket.emit('login okornot',false);
+			socket.emit('nickName not ok');
 		}
 	});
 	//加入某个房间
-	socket.on('user loginRoom' ,function(data){
-		var roomNum = data[0];
+	socket.on('user loginRoom' ,function(roomNum){
 		var roomName = "r"+roomNum;
-		var nickName = data[1];
+		//var nickName = data[1];
 		var isRoomExist = false;
 		for(i=0;i<ROOMS.length;i++){
 			if(ROOMS[i] == roomName){
@@ -196,15 +199,16 @@ game.on('connection', function(socket){
 			roomName= "r"+roomNum;
 			socket.ROOMNUM = roomNum;
 			socket.ROOMNAME = roomName;
-			socket.NICKNAME = nickName;
+			//socket.NICKNAME = nickName;
 			console.log(roomName);
-			ROOMS[roomName].userId[nickName] = socket.id;
-			ROOMS[roomName].userList.push(nickName);
-			allUserList.push(nickName);
+			//ROOMS[roomName].userId[nickName] = socket.id;
+			//ROOMS[roomName].userList.push(nickName);
+			//allUserList.push(nickName);
 
 			//玩家可以加入这个房间了
-			console.log(nickName + " 进入了 房间"+ roomName );
-			game.to(roomNum).emit('user inRoom', [roomNum,ROOMS[roomName].userList]);
+			//console.log(nickName + " 进入了 房间"+ roomName );
+			//game.to(roomNum).emit('user inRoom', [roomNum,ROOMS[roomName].userList]);
+			socket.emit('in the room', roomNum);
 		 }else{
 		 	socket.emit('not this room');
 		 }
@@ -212,7 +216,7 @@ game.on('connection', function(socket){
 		//console.log(roomList);
 	});
 	//创建新房间
-	socket.on('create new room',function(nickName){
+	socket.on('create new room',function(){
 		var roomNum;
 		var roomName;
 		if(ROOMS.length == 0){
@@ -233,17 +237,17 @@ game.on('connection', function(socket){
 		roomName= "r"+roomNum;
 		socket.ROOMNUM = roomNum;
 		socket.ROOMNAME = roomName;
-		socket.NICKNAME = nickName;
+		//socket.NICKNAME = nickName;
 		console.log(roomName);
 		ROOMS.push(roomName);
 		ROOMS[roomName] = new Room(roomNum);
+		socket.emit('in the room', roomNum);
+		//ROOMS[roomName].userId[nickName] = socket.id;
+		//ROOMS[roomName].userList.push(nickName);
+		//allUserList.push(nickName);
+		//console.log(nickName + " 进入了 房间"+ roomName );
 
-		ROOMS[roomName].userId[nickName] = socket.id;
-		ROOMS[roomName].userList.push(nickName);
-		allUserList.push(nickName);
-		console.log(nickName + " 进入了 房间"+ roomName );
-
-		socket.emit('user inRoom', [roomNum,ROOMS[roomName].userList]);
+		//socket.emit('user inRoom', [roomNum,ROOMS[roomName].userList]);
 
 	});
 	//监听用户准备
@@ -339,6 +343,7 @@ game.on('connection', function(socket){
 	
 	//断开连接
 	socket.on('disconnect', function(){
+		OnlineNum--;
 		if(socket.ADDEDUSER){
 			for(var i=0;i<ROOMS[socket.ROOMNAME].userList.length;i++){
 				if(ROOMS[socket.ROOMNAME].userList[i]==socket.NICKNAME){
