@@ -46,20 +46,23 @@ game.on('connection', function(socket){
 		gameInit:function(){
 			this.gameOn = true;
 			this.MURDER = null;
+			this.gamerList = [];
+			console.log("房间用户人数"+ userList.length);
 			for(i=0;i<this.userList.length;i++){
 				this.gamerList[i] = this.userList[i];
 			}
 			this.gamerNum = this.gamerList.length;
+			console.log("游戏初始化,游戏人数"+ this.gamerNum);
 			this.dealing(this.gamerNum);
 			this.gameStart();
+
 		},
 		dealing:function(gamerNum){
 			var poker = new Poker();
 			poker.shuffling();
-			console.log("这次的玩家有" + this.gamerList);
+			console.log("开始发牌，这次的玩家有" + this.gamerList);
 			switch(gamerNum){
 				case 2:
-					console.log('2个玩家');
 					for(i=0;i<2;i++){
 						var index = i*12;
 						console.log( poker.pokers.slice(i*12,i*12+12));
@@ -194,21 +197,25 @@ game.on('connection', function(socket){
 			}
 		}
 		if(isRoomExist){
-			socket.join(roomNum);
-			socket.ADDEDUSER = true;
-			roomName= "r"+roomNum;
-			socket.ROOMNUM = roomNum;
-			socket.ROOMNAME = roomName;
-			//socket.NICKNAME = nickName;
-			console.log(roomName);
-			//ROOMS[roomName].userId[nickName] = socket.id;
-			//ROOMS[roomName].userList.push(nickName);
-			//allUserList.push(nickName);
+			if(!ROOMS[roomName].gameOn){
+				socket.join(roomNum);
+				socket.ADDEDUSER = true;
+				roomName= "r"+roomNum;
+				socket.ROOMNUM = roomNum;
+				socket.ROOMNAME = roomName;
+				//socket.NICKNAME = nickName;
+				console.log(roomName);
+				//ROOMS[roomName].userId[nickName] = socket.id;
+				//ROOMS[roomName].userList.push(nickName);
+				//allUserList.push(nickName);
 
-			//玩家可以加入这个房间了
-			//console.log(nickName + " 进入了 房间"+ roomName );
-			//game.to(roomNum).emit('user inRoom', [roomNum,ROOMS[roomName].userList]);
-			socket.emit('in the room', roomNum);
+				//玩家可以加入这个房间了
+				//console.log(nickName + " 进入了 房间"+ roomName );
+				//game.to(roomNum).emit('user inRoom', [roomNum,ROOMS[roomName].userList]);
+				socket.emit('in the room', roomNum);
+			}else{
+				socket.emit(gaming);
+			}
 		 }else{
 		 	socket.emit('not this room');
 		 }
@@ -351,6 +358,7 @@ game.on('connection', function(socket){
 					ROOMS[socket.ROOMNAME].userList.splice(i,1);
 					game.to(socket.ROOMNUM).emit('note user loginout', ROOMS[socket.ROOMNAME].userList);
 					ROOMS[socket.ROOMNAME].readyNum = 0;
+					ROOMS[socket.ROOMNAME].gameOn = false;
 					console.log(ROOMS[socket.ROOMNAME].userList.length);
 					if(ROOMS[socket.ROOMNAME].userList.length == 0){
 						console.log(ROOMS.length + ',' + socket.ROOMNAME);
