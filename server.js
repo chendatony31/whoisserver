@@ -47,6 +47,11 @@ game.on('connection', function(socket){
 			this.gameOn = true;
 			this.MURDER = null;
 			this.gamerList = [];
+			this.gameRound = 0;
+			this.userIndex = 0;
+			this.userTurn = 0;
+			this.gamerPoker = {};
+			this.PUBLISH = null;
 			console.log("房间用户人数"+ userList.length);
 			for(i=0;i<this.userList.length;i++){
 				this.gamerList[i] = this.userList[i];
@@ -214,7 +219,7 @@ game.on('connection', function(socket){
 				//game.to(roomNum).emit('user inRoom', [roomNum,ROOMS[roomName].userList]);
 				socket.emit('in the room', roomNum);
 			}else{
-				socket.emit(gaming);
+				socket.emit('gaming');
 			}
 		 }else{
 		 	socket.emit('not this room');
