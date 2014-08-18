@@ -52,7 +52,7 @@ game.on('connection', function(socket){
 			this.userTurn = 0;
 			this.gamerPoker = {};
 			this.PUBLISH = null;
-			console.log("房间用户人数"+ userList.length);
+			console.log("房间用户人数"+ this.userList.length);
 			for(i=0;i<this.userList.length;i++){
 				this.gamerList[i] = this.userList[i];
 			}
