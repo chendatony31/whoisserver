@@ -41,6 +41,7 @@ game.on('connection', function(socket){
 		this.MURDER = null;
 		this.PUBLISH = null;
 		this.readyNum = 0;
+		this.DROPTHREELIST = [];
 	}
 	Room.prototype ={
 		gameInit:function(){
@@ -52,7 +53,8 @@ game.on('connection', function(socket){
 			this.userTurn = 0;
 			this.gamerPoker = {};
 			this.PUBLISH = null;
-			console.log("房间用户人数"+ userList.length);
+			this.DROPTHREELIST = [];
+			console.log("房间用户人数"+ this.userList.length);
 			for(i=0;i<this.userList.length;i++){
 				this.gamerList[i] = this.userList[i];
 			}
@@ -218,6 +220,9 @@ game.on('connection', function(socket){
 				//console.log(nickName + " 进入了 房间"+ roomName );
 				//game.to(roomNum).emit('user inRoom', [roomNum,ROOMS[roomName].userList]);
 				socket.emit('in the room', roomNum);
+				//for (var socketId in io.nsps['/game'].adapter.rooms[roomNum]) {
+				  //  console.log(socketId);
+				//}
 			}else{
 				socket.emit('gaming');
 			}
@@ -290,16 +295,29 @@ game.on('connection', function(socket){
 			game.connected[ROOMS[socket.ROOMNAME].userId[ROOMS[socket.ROOMNAME].gamerList[ROOMS[socket.ROOMNAME].userIndex]]].emit('accept nopoker', name);
 		//}
 	});
+
+	//有人没牌了
+	socket.on('i have no cards',function(){
+		socket.emit('here is dark cards', ROOMS[socket.ROOMNAME].DROPTHREELIST);
+	})
+	//过了
+	socket.on('passed by',function(){
+		ROOMS[socket.ROOMNAME].nextTurn();
+	})
 	//扔的第一张
 	socket.on('drop firstPoker',function(poker){
 		socket.broadcast.to(socket.ROOMNUM).emit('one of three', {pokerid:poker,who:ROOMS[socket.ROOMNAME].userTurn});
 		ROOMS[socket.ROOMNAME].nextTurn();
 		console.log(ROOMS[socket.ROOMNAME].userTurn + '扔了三张！');
+
 	});
 	//扔的其他，别人不知道，自己知道
 	socket.on('drop otherPoker',function(pokers){
 		socket.emit('others poker', pokers);
-		
+		for(i=0;i<pokers.length;i++){
+			ROOMS[socket.ROOMNAME].DROPTHREELIST.push(pokers[i]);
+		}
+		console.log(ROOMS[socket.ROOMNAME].DROPTHREELIST);
 	});
 	//只扔了一张
 	socket.on('drop onePoker',function(poker){
