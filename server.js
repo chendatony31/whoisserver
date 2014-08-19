@@ -1,31 +1,16 @@
 var io = require('socket.io').listen(3000);
 var userNum = 0;
-var roomsDetailInfo=[];
 var ROOMS = [];
-//var userList = [];
-//var userListJson ={};
-//var usersId = {};
-//var gameOn = false;
-//var gamerList = [];
-//var gamerNum ;
-//var gamerPoker = {};
-//var gameRound = 0;
-//var userIndex =0;
-//var userTurn;
-//var MURDER;
-//var PUBLISH;
-//var readyNum = 0;
 var allUserList = []
-//var roomList = [];
 var allNum = 0;
 var TOTALLVISIT = 0;
 var OnlineNum = 0;
-
 
 var game = io.of('/game');
 game.on('connection', function(socket){
 	++TOTALLVISIT;
 	++OnlineNum;
+	console.log(typeof(ROOMS));
 	//room构造函数
 	function Room(roomid){
 		this.roomId = roomid;
@@ -162,10 +147,16 @@ game.on('connection', function(socket){
 			});
 		}
 	}
-	//连接成功
 
+	// var roomlist = [];
+	// //连接成功
+	// for(i=0;i<ROOMS.length;i++){
+	// 	var tmproomid = ROOMS[i].roomId;
+	// 	var tmpnum  = ROOMS[i].userList.length;
+	// 	var tmpon =  ROOMS[i].gameOn;
+	// 	roomlist.push({roomid:tmproomid , gaming:tmpon ,num:tmpnum});
+	// }
 	socket.emit('server is Ok',[TOTALLVISIT,OnlineNum]);
-
 		
 	
 	var ADDEDUSER = false;
@@ -271,6 +262,7 @@ game.on('connection', function(socket){
 	socket.on('im ready',function(){
 		ROOMS[socket.ROOMNAME].readyNum ++;
 		console.log('someone is ready!' + ROOMS[socket.ROOMNAME].readyNum +" " + ROOMS[socket.ROOMNAME].userList.length);
+		game.to(socket.ROOMNUM).emit('i am ready',socket.NICKNAME);
 		if(ROOMS[socket.ROOMNAME].readyNum==ROOMS[socket.ROOMNAME].userList.length && ROOMS[socket.ROOMNAME].readyNum > 1){
 			game.to(socket.ROOMNUM).emit('all is ready');
 			console.log(ROOMS[socket.ROOMNAME]);
