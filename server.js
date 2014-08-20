@@ -10,7 +10,6 @@ var game = io.of('/game');
 game.on('connection', function(socket){
 	++TOTALLVISIT;
 	++OnlineNum;
-	console.log(typeof(ROOMS));
 	//room构造函数
 	function Room(roomid){
 		this.roomId = roomid;
@@ -119,9 +118,9 @@ game.on('connection', function(socket){
 			}
 		},
 		gameStart:function(){
-			console.log(this.userTurn + "," + this.gamerList[this.userIndex] );
+			//console.log(this.userTurn + "," + this.gamerList[this.userIndex] );
 			this.userTurn = this.gamerList[this.userIndex];
-			console.log(socket.ROOMNAME);
+			console.log("游戏开始房间信息：" + socket.ROOMNAME);
 			game.to(socket.ROOMNUM).emit('whos turn', this.userTurn);
 		},
 		nextTurn:function(){
@@ -148,15 +147,20 @@ game.on('connection', function(socket){
 		}
 	}
 
-	// var roomlist = [];
-	// //连接成功
-	// for(i=0;i<ROOMS.length;i++){
-	// 	var tmproomid = ROOMS[i].roomId;
-	// 	var tmpnum  = ROOMS[i].userList.length;
-	// 	var tmpon =  ROOMS[i].gameOn;
-	// 	roomlist.push({roomid:tmproomid , gaming:tmpon ,num:tmpnum});
-	// }
-	socket.emit('server is Ok',[TOTALLVISIT,OnlineNum]);
+	var roomlist = [];
+	//连接成功
+	if(ROOMS.length != 0){
+		for(i=0;i<ROOMS.length;i++){
+			var tmp_roomname = ROOMS[i];
+
+			var tmproomid = ROOMS[tmp_roomname].roomId;
+			var tmpnum  = ROOMS[tmp_roomname].userList.length;
+			var tmpon =  ROOMS[tmp_roomname].gameOn*1;
+			//console.log(tmproomid+ ','+ tmpnum + ','+ tmpon);
+			roomlist.push({roomid:tmproomid , gaming:tmpon ,num:tmpnum});
+		}
+	}
+	socket.emit('server is Ok',[TOTALLVISIT,OnlineNum,roomlist]);
 		
 	
 	var ADDEDUSER = false;
@@ -284,7 +288,9 @@ game.on('connection', function(socket){
 	//没有牌给
 	socket.on('deliver nopoker',function(name){
 		//if(ROOMS[socket.ROOMNAME].userId[ROOMS[socket.ROOMNAME].gamerList[ROOMS[socket.ROOMNAME].userIndex]]){
-			game.connected[ROOMS[socket.ROOMNAME].userId[ROOMS[socket.ROOMNAME].gamerList[ROOMS[socket.ROOMNAME].userIndex]]].emit('accept nopoker', name);
+			var tmpMyRoom = ROOMS[socket.ROOMNAME];
+			//game.connected[tmpMyRoom.userId[tmpMyRoom.gamerList[tmpMyRoom.userIndex]]].emit('accept nopoker', name);
+			game.to(socket.ROOMNUM).emit('accept nopoker',[name,tmpMyRoom.gamerList[tmpMyRoom.userIndex]]);
 		//}
 	});
 
@@ -375,7 +381,12 @@ game.on('connection', function(socket){
 					ROOMS[socket.ROOMNAME].readyNum = 0;
 					ROOMS[socket.ROOMNAME].gameOn = false;
 					console.log(ROOMS[socket.ROOMNAME].userList.length);
-					if(ROOMS[socket.ROOMNAME].userList.length == 0){
+					
+					//console.log('准备人数:'+ROOMS[socket.ROOMNAME].readyNum);
+					break;
+				}
+			}
+			if(ROOMS[socket.ROOMNAME].userList.length == 0){
 						console.log(ROOMS.length + ',' + socket.ROOMNAME);
 						for(i=0;i<ROOMS.length; i++	){
 							console.log('room'+ i + ":" + ROOMS[i] + ",");
@@ -386,18 +397,13 @@ game.on('connection', function(socket){
 							}
 						}
 					}
-					//console.log('准备人数:'+ROOMS[socket.ROOMNAME].readyNum);
-					break;
-				}
-			}
 			for(i=0;i<allUserList.length;i++){
 				if(allUserList[i] == socket.NICKNAME){
 					allUserList.splice(i,1);
 					break;
 				}
 			}
-
-			console.log(allUserList);
+			console.log("目前在线："+allUserList);
 		}
 	});
 });
