@@ -148,20 +148,25 @@ game.on('connection', function(socket){
 	}
 
 	var roomlist = [];
-	//连接成功
-	if(ROOMS.length != 0){
-		for(i=0;i<ROOMS.length;i++){
-			var tmp_roomname = ROOMS[i];
+	function roomListUpdate(){ 
+		roomlist=[];
+		if(ROOMS.length != 0){
+			for(i=0;i<ROOMS.length;i++){
+				var tmp_roomname = ROOMS[i];
 
-			var tmproomid = ROOMS[tmp_roomname].roomId;
-			var tmpnum  = ROOMS[tmp_roomname].userList.length;
-			var tmpon =  ROOMS[tmp_roomname].gameOn*1;
-			//console.log(tmproomid+ ','+ tmpnum + ','+ tmpon);
-			roomlist.push({roomid:tmproomid , gaming:tmpon ,num:tmpnum});
+				var tmproomid = ROOMS[tmp_roomname].roomId;
+				var tmpnum  = ROOMS[tmp_roomname].userList.length;
+				var tmpon =  ROOMS[tmp_roomname].gameOn*1;
+				//console.log(tmproomid+ ','+ tmpnum + ','+ tmpon);
+				roomlist.push({roomid:tmproomid , gaming:tmpon ,num:tmpnum});
+			}
 		}
 	}
+	roomListUpdate();
+	//连接成功返回在线人数房间等信息
 	socket.emit('server is Ok',[TOTALLVISIT,OnlineNum,roomlist]);
-		
+	//向大家发送有人进入大厅
+	socket.broadcast.emit("someone in",[TOTALLVISIT,OnlineNum])
 	
 	var ADDEDUSER = false;
 	
@@ -183,6 +188,8 @@ game.on('connection', function(socket){
 			allUserList.push(nickName);
 			console.log(nickName + " 进入了 房间"+ socket.ROOMNAME );
 			game.to(socket.ROOMNUM).emit('user inRoom', [socket.ROOMNUM,ROOMS[socket.ROOMNAME].userList]);
+			roomListUpdate();
+			socket.broadcast.emit("room change",roomlist);
 		}else{
 			socket.emit('nickName not ok');
 		}
@@ -254,6 +261,8 @@ game.on('connection', function(socket){
 		ROOMS.push(roomName);
 		ROOMS[roomName] = new Room(roomNum);
 		socket.emit('in the room', roomNum);
+		roomListUpdate();
+		socket.broadcast.emit("room change",roomlist);
 		//ROOMS[roomName].userId[nickName] = socket.id;
 		//ROOMS[roomName].userList.push(nickName);
 		//allUserList.push(nickName);
@@ -272,6 +281,8 @@ game.on('connection', function(socket){
 			console.log(ROOMS[socket.ROOMNAME]);
 			ROOMS[socket.ROOMNAME].gameInit();
 			ROOMS[socket.ROOMNAME].readyNum = 0;
+			roomListUpdate();
+			game.emit("room change",roomlist);
 		}
 	});
 	//监听用户要牌
@@ -334,6 +345,8 @@ game.on('connection', function(socket){
 			ROOMS[socket.ROOMNAME].gamerPoker ={};
 			ROOMS[socket.ROOMNAME].gamerNum = 0;
 			ROOMS[socket.ROOMNAME].readyNum = 0;
+			roomListUpdate();
+			game.emit("room change",roomlist);
 			
 		}else{
 			game.to(socket.ROOMNUM).emit('guess failed', {who:data.who,pokerid:data.pokerid});
@@ -349,6 +362,8 @@ game.on('connection', function(socket){
 				ROOMS[socket.ROOMNAME].gamerNum = 0;
 				ROOMS[socket.ROOMNAME].readyNum = 0;
 				game.to(socket.ROOMNUM).emit('game over');
+				roomListUpdate();
+				game.emit("room change",roomlist);
 			}else{
 				ROOMS[socket.ROOMNAME].userIndex--;
 				ROOMS[socket.ROOMNAME].nextTurn();
@@ -372,6 +387,7 @@ game.on('connection', function(socket){
 	//断开连接
 	socket.on('disconnect', function(){
 		OnlineNum--;
+		socket.broadcast.emit("someone out",[TOTALLVISIT,OnlineNum,roomlist])
 		if(socket.ADDEDUSER){
 			for(var i=0;i<ROOMS[socket.ROOMNAME].userList.length;i++){
 				if(ROOMS[socket.ROOMNAME].userList[i]==socket.NICKNAME){
@@ -380,6 +396,8 @@ game.on('connection', function(socket){
 					game.to(socket.ROOMNUM).emit('note user loginout', ROOMS[socket.ROOMNAME].userList);
 					ROOMS[socket.ROOMNAME].readyNum = 0;
 					ROOMS[socket.ROOMNAME].gameOn = false;
+					roomListUpdate();
+					game.emit("room change",roomlist);
 					console.log(ROOMS[socket.ROOMNAME].userList.length);
 					
 					//console.log('准备人数:'+ROOMS[socket.ROOMNAME].readyNum);
@@ -393,6 +411,8 @@ game.on('connection', function(socket){
 							if(ROOMS[i] == socket.ROOMNAME){
 								console.log('删除了房间'+ ROOMS[socket.ROOMNAME]);
 								ROOMS.splice(i,1);
+								roomListUpdate();
+								game.emit("room change",roomlist);
 								break;
 							}
 						}
